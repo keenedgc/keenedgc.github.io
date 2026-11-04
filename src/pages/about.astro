@@ -1,0 +1,17 @@
+---
+import { getEntry, render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const page = await getEntry('site', 'about');
+const { Content } = page ? await render(page) : { Content: null };
+---
+<BaseLayout title={page?.data.title ?? 'About'} description={page?.data.description}>
+  <article>
+    <header class="page-header">
+      <h1 class="font-display text-5xl">{page?.data.title ?? 'About'}</h1>
+    </header>
+    <div class="mx-auto w-full max-w-5xl px-6 py-12">
+      {Content && <div class="prose prose-stone max-w-none prose-headings:font-display prose-headings:uppercase prose-headings:tracking-wide prose-a:text-keene-blue"><Content /></div>}
+    </div>
+  </article>
+</BaseLayout>

@@ -1,0 +1,41 @@
+---
+import { siteConfig } from '../config/site';
+
+const pathname = Astro.url.pathname;
+---
+<header class="sticky top-0 z-50 border-b border-[#D4C9B8] bg-[#FAF8F5]/95 backdrop-blur">
+  <nav class="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-4">
+    <a href="/" class="text-xl font-display uppercase tracking-wider text-keene-bark sm:text-2xl">{siteConfig.clubName}</a>
+
+    <button
+      class="site-nav-toggle inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#D4C9B8] text-keene-bark md:hidden"
+      aria-label="Toggle navigation menu"
+      type="button"
+    >
+      <span class="sr-only">Open menu</span>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+
+    <ul class="site-nav-menu absolute left-4 right-4 top-[72px] hidden flex-col gap-2 rounded-lg border border-[#D4C9B8] bg-[#FAF8F5] p-3 shadow-panel md:static md:flex md:flex-row md:items-center md:gap-1 md:border-none md:bg-transparent md:p-0 md:shadow-none">
+      {siteConfig.menu.map((item) => {
+        const active = pathname === item.url || (item.url !== '/' && pathname.startsWith(item.url));
+        return (
+          <li>
+            <a
+              href={item.url}
+              class={`rounded-lg px-3 py-2 text-base font-display uppercase tracking-wider transition ${
+                active
+                  ? 'bg-keene-forest text-white'
+                  : 'text-keene-bark hover:bg-keene-sand hover:text-keene-forest'
+              }`}
+            >
+              {item.name}
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </nav>
+</header>

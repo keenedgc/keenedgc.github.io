@@ -1,0 +1,28 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  news: CollectionEntry<'news'>[];
+}
+
+const { news } = Astro.props;
+---
+{news.length > 0 && (
+  <section class="py-10 sm:py-14">
+    <div class="mx-auto w-full max-w-6xl px-6">
+      <div class="mb-6 flex items-end justify-between gap-4">
+        <h2 class="font-display text-3xl text-keene-forest sm:text-4xl">Latest News</h2>
+        <a href="/news/" class="text-base font-display uppercase tracking-wide text-keene-blue hover:text-keene-crimson">Read all</a>
+      </div>
+      <div class="grid gap-5 md:grid-cols-3">
+        {news.map((post) => (
+          <article class="surface-panel p-5">
+            <h3 class="font-display text-2xl text-keene-forest"><a href={`/news/${post.id}/`} class="hover:text-keene-blue">{post.data.title}</a></h3>
+            <p class="mt-2 text-base font-display uppercase tracking-wide text-stone-500">{post.data.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+            {post.data.description && <p class="mt-3 text-base leading-6 text-stone-700">{post.data.description}</p>}
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+)}

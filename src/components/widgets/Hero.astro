@@ -1,0 +1,36 @@
+---
+import { siteConfig } from '../../config/site';
+---
+<section class="texture-noise relative overflow-hidden bg-keene-cream pb-20 pt-12 sm:pt-24">
+  <div class="absolute inset-0 -z-10 bg-gradient-to-br from-keene-sand/60 via-keene-cream to-[#FAF8F5]"></div>
+  <div class="absolute -top-20 right-0 -z-10 h-64 w-64 rounded-full bg-keene-chartreuse/10 blur-3xl"></div>
+  <div class="mx-auto grid w-full max-w-6xl gap-10 px-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+    <div>
+      <img src={siteConfig.logo} alt="Keene Disc Golf Club logo" class="mx-auto mb-6 h-24 w-auto drop-shadow-lg sm:mx-0 sm:h-32" />
+      <h1 class="text-balance text-center font-display text-4xl text-keene-forest sm:text-left sm:text-5xl md:text-6xl">
+        {siteConfig.tagline}
+      </h1>
+      <p class="mx-auto mt-5 max-w-2xl text-pretty text-left text-base leading-7 text-stone-700 sm:mx-0 sm:text-lg">
+        Maintaining Otter Brook and The Pines at Wheelock and promoting disc golf in the Monadnock Region through leagues, tournaments, and community outreach.
+      </p>
+      <div class="mt-8 flex flex-wrap justify-center gap-3 sm:justify-start">
+        <a
+          href="/events/"
+          class="rounded-lg bg-keene-olive px-5 py-3 text-base font-display uppercase tracking-wide text-white shadow-soft transition hover:bg-keene-forest"
+        >
+          Explore Events
+        </a>
+        <a
+          href="/courses/"
+          class="rounded-lg border border-keene-bark/40 bg-[#FAF8F5] px-5 py-3 text-base font-display uppercase tracking-wide text-keene-bark transition hover:bg-keene-sand"
+        >
+          Find a Course
+        </a>
+      </div>
+    </div>
+
+    <div class="surface-panel h-64 overflow-hidden sm:h-72 lg:h-80">
+      <img src="/images/uploads/club-group-field.jpg" alt="Keene Disc Golf Club members holding up discs around a basket" class="h-full w-full object-cover" loading="eager" />
+    </div>
+  </div>
+</section>

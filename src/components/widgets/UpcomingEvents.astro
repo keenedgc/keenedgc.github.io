@@ -1,0 +1,67 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  events: CollectionEntry<'events'>[];
+}
+
+const { events } = Astro.props;
+const fmtDate = (date?: Date) => (date ? date.toISOString().slice(0, 10) : undefined);
+---
+{events.length > 0 && (
+  <section class="py-10 sm:py-14">
+    <div class="mx-auto w-full max-w-6xl px-6">
+      <div class="mb-6 flex items-end justify-between gap-4">
+        <h2 class="font-display text-3xl text-keene-forest sm:text-4xl">Upcoming Events</h2>
+        <a href="/events/" class="text-base font-display uppercase tracking-wide text-keene-blue hover:text-keene-crimson">View all</a>
+      </div>
+      <div class="grid gap-4 md:grid-cols-3">
+        {events.map((event) => {
+          const weekday = event.data.weekday ?? event.data.day;
+          const recurring = event.data.event_type === 'League' && weekday && event.data.time;
+          return (
+            <a
+              href={`/events/${event.id}/`}
+              class="group block surface-panel overflow-hidden transition hover:-translate-y-0.5"
+              data-recurring-league={recurring ? true : undefined}
+              data-weekday={recurring ? weekday : undefined}
+              data-time={recurring ? event.data.time : undefined}
+              data-season-start={recurring ? fmtDate(event.data.season_start) : undefined}
+              data-season-end={recurring ? fmtDate(event.data.season_end) : undefined}
+            >
+              {event.data.image ? (
+                <img src={event.data.image} alt={event.data.title} class="h-44 w-full object-cover" loading="lazy" />
+              ) : (
+                <div class="h-44 w-full bg-keene-sand"></div>
+              )}
+              <div class="p-5">
+                <div class="mb-3 flex flex-wrap items-center gap-3">
+                  <div class="rounded-lg bg-keene-forest px-3 py-2 text-center text-white">
+                    {recurring ? (
+                      <>
+                        <p class="text-base font-display uppercase tracking-wide" data-next-occurrence-month>--</p>
+                        <p class="text-xl font-display" data-next-occurrence-day>--</p>
+                      </>
+                    ) : (
+                      <>
+                        <p class="text-base font-display uppercase tracking-wide">{event.data.date.toLocaleDateString('en-US', { month: 'short' })}</p>
+                        <p class="text-xl font-display">{event.data.date.toLocaleDateString('en-US', { day: 'numeric' })}</p>
+                      </>
+                    )}
+                  </div>
+                  <p class="rounded-lg bg-keene-sand px-3 py-1 text-base font-display uppercase tracking-wide text-keene-bark">{event.data.event_type}</p>
+                  {event.data.tentative && (
+                    <p class="rounded-lg bg-keene-crimson px-3 py-1 text-base font-display uppercase tracking-wide text-white">Tentative</p>
+                  )}
+                </div>
+                <h3 class="font-display text-2xl text-keene-forest transition group-hover:text-keene-blue">{event.data.title}</h3>
+                {event.data.location && <p class="mt-2 text-base text-stone-700">{event.data.location}</p>}
+                {recurring && <p class="mt-2 text-base font-medium text-keene-blue" data-next-occurrence>Next occurrence will appear here.</p>}
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+)}

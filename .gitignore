@@ -1,0 +1,19 @@
+# Build outputs
+dist/
+.astro/
+resources/_gen/
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Claude Code
+CLAUDE.md

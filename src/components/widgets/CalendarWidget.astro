@@ -1,0 +1,19 @@
+---
+import { getCollection } from 'astro:content';
+import EventCalendar from '../EventCalendar';
+import { toCalendarEvents } from '../../utils/calendarEvents';
+
+const events = await getCollection('events');
+const calendarEvents = toCalendarEvents(events);
+---
+<section class="py-10 sm:py-14">
+  <div class="mx-auto w-full max-w-6xl px-6">
+    <div class="mb-6 flex items-end justify-between gap-4">
+      <h2 class="font-display text-3xl text-keene-forest sm:text-4xl">Calendar</h2>
+      <a href="/events/" class="text-base font-display uppercase tracking-wide text-keene-blue hover:text-keene-crimson">All events</a>
+    </div>
+    <div class="surface-panel p-4 sm:p-6">
+      <EventCalendar client:load events={calendarEvents} compact />
+    </div>
+  </div>
+</section>

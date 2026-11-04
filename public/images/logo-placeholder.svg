@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Placeholder logo: a stylized disc with mountain silhouette -->
+  <circle cx="100" cy="100" r="90" fill="#2d6a4f" />
+  <circle cx="100" cy="100" r="70" fill="none" stroke="#40916c" stroke-width="3" />
+  <circle cx="100" cy="100" r="20" fill="#e09f3e" />
+  <!-- Mountain silhouette -->
+  <polygon points="40,130 70,85 90,110 120,70 160,130" fill="#1b4332" opacity="0.6" />
+  <!-- Text -->
+  <text x="100" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#ffffff">KDGC</text>
+</svg>

@@ -1,0 +1,79 @@
+---
+import { getCollection, getEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const section = await getEntry('sections', 'courses');
+const courses = (await getCollection('courses')).sort((a, b) => (a.data.weight ?? 99) - (b.data.weight ?? 99));
+---
+<BaseLayout title={section?.data.title ?? 'Local Courses'} description={section?.data.description}>
+  <article>
+    <header class="page-header">
+      <h1 class="font-display text-5xl">{section?.data.title ?? 'Local Courses'}</h1>
+      {section?.data.description && <p class="mx-auto mt-3 max-w-2xl px-6 text-keene-cream/90">{section.data.description}</p>}
+    </header>
+
+    <div class="mx-auto w-full max-w-5xl px-6 py-12">
+      {courses.length > 0 ? (
+        <div class="grid gap-6 md:grid-cols-2">
+          {courses.map((course) => (
+            <article class="surface-panel overflow-hidden">
+              <div class="h-52 w-full overflow-hidden border-b border-[#D4C9B8]">
+                {course.data.image ? (
+                  <img src={course.data.image} alt={course.data.title} class="h-full w-full object-cover" />
+                ) : (
+                  <div class="h-full w-full bg-keene-sand"></div>
+                )}
+              </div>
+
+              <div class="p-5">
+                <h2 class="font-display text-3xl text-keene-forest"><a href={`/courses/${course.id}/`} class="hover:text-keene-blue">{course.data.title}</a></h2>
+                {course.data.location && <p class="mt-2 text-base text-stone-700">{course.data.location}</p>}
+
+                <div class="mt-3 flex flex-wrap gap-2">
+                  {course.data.holes && <span class="rounded-lg bg-keene-sand px-3 py-1 text-base font-display uppercase tracking-wide text-keene-bark">{course.data.holes} holes</span>}
+                  {course.data.difficulty && <span class="rounded-lg bg-keene-blue/10 px-3 py-1 text-base font-display uppercase tracking-wide text-keene-blue">{course.data.difficulty}</span>}
+                  {course.data.club_sponsored && <span class="rounded-lg bg-keene-crimson px-3 py-1 text-base font-display uppercase tracking-wide text-white">Club Sponsored</span>}
+                </div>
+
+                {course.data.description && <p class="mt-4 text-base leading-6 text-stone-700">{course.data.description}</p>}
+
+                <div class="mt-5 flex flex-wrap gap-3">
+                  <a href={`/courses/${course.id}/`} class="rounded-lg bg-keene-olive px-4 py-2 text-base font-display uppercase tracking-wide text-white transition hover:bg-keene-forest">View Course</a>
+                  {course.data.udisc_link && (
+                    <a
+                      href={course.data.udisc_link}
+                      class="rounded-lg border border-[#D4C9B8] bg-[#FAF8F5] px-4 py-2 text-base font-display uppercase tracking-wide text-keene-bark transition hover:bg-keene-sand"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      UDisc
+                    </a>
+                  )}
+                </div>
+              </div>
+            </article>
+          ))}
+
+          <a
+            href="https://udisc.com/courses?latitude=42.9337&longitude=-72.2781"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="group flex w-full max-w-[24rem] items-center gap-3 justify-self-center self-center rounded-lg border border-[#D4C9B8] bg-keene-cream/70 px-4 py-4 text-keene-bark shadow-soft/40 transition hover:-translate-y-0.5 hover:border-keene-blue/35 hover:bg-keene-cream"
+          >
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-keene-bark/15">
+              <img src="/images/udisc-icon.png" alt="UDisc logo" class="h-7 w-7" loading="lazy" />
+            </div>
+
+            <div class="min-w-0">
+              <p class="text-xs font-display uppercase tracking-[0.18em] text-keene-bark/70">UDisc</p>
+              <h2 class="mt-1 font-display text-xl leading-tight text-keene-bark transition group-hover:text-keene-blue">Explore more</h2>
+              <p class="mt-1 text-sm leading-5 text-stone-700">Explore even more course on UDisc</p>
+            </div>
+          </a>
+        </div>
+      ) : (
+        <p>No courses found.</p>
+      )}
+    </div>
+  </article>
+</BaseLayout>

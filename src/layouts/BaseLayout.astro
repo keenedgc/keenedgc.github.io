@@ -1,0 +1,188 @@
+---
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { siteConfig } from '../config/site';
+import '../styles/tailwind.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+}
+
+const { title, description = siteConfig.description, image } = Astro.props;
+const pageTitle = `${title} | ${siteConfig.title}`;
+---
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#2F4C24" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={Astro.url.href} />
+    {image && <meta property="og:image" content={new URL(image, Astro.site).href} />}
+    <link rel="canonical" href={Astro.url.href} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Source+Sans+3:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <title>{pageTitle}</title>
+  </head>
+  <body>
+    <Nav />
+    <main class="min-h-[60vh]">
+      <slot />
+    </main>
+    <Footer />
+
+    <script is:inline>
+      document.addEventListener('DOMContentLoaded', function () {
+        const navToggle = document.querySelector('.site-nav-toggle');
+        const navMenu = document.querySelector('.site-nav-menu');
+
+        if (navToggle && navMenu) {
+          navToggle.addEventListener('click', function () {
+            navMenu.classList.toggle('active');
+          });
+
+          const navLinks = navMenu.querySelectorAll('a');
+          navLinks.forEach((link) => {
+            link.addEventListener('click', function () {
+              navMenu.classList.remove('active');
+            });
+          });
+        }
+
+        function parseWeekdayIndex(value) {
+          if (!value) return null;
+          const normalized = value.toLowerCase();
+          if (normalized.includes('sun')) return 0;
+          if (normalized.includes('mon')) return 1;
+          if (normalized.includes('tue')) return 2;
+          if (normalized.includes('wed')) return 3;
+          if (normalized.includes('thu')) return 4;
+          if (normalized.includes('fri')) return 5;
+          if (normalized.includes('sat')) return 6;
+          return null;
+        }
+
+        function parseClockTime(value) {
+          if (!value) return null;
+          const match = value.trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+          if (!match) return null;
+
+          let hour = Number(match[1]);
+          const minute = Number(match[2] || '0');
+          const meridiem = match[3] ? match[3].toUpperCase() : null;
+
+          if (minute < 0 || minute > 59) return null;
+
+          if (meridiem) {
+            if (hour < 1 || hour > 12) return null;
+            if (meridiem === 'AM' && hour === 12) hour = 0;
+            if (meridiem === 'PM' && hour !== 12) hour += 12;
+          } else if (hour < 0 || hour > 23) {
+            return null;
+          }
+
+          return { hour, minute };
+        }
+
+        function getNextOccurrence(weekdayText, timeText, seasonStartText, seasonEndText) {
+          const weekdayIndex = parseWeekdayIndex(weekdayText);
+          const clock = parseClockTime(timeText);
+          if (weekdayIndex === null || !clock) return null;
+
+          const now = new Date();
+          const next = new Date(now);
+          const dayOffset = (weekdayIndex - now.getDay() + 7) % 7;
+
+          next.setDate(now.getDate() + dayOffset);
+          next.setHours(clock.hour, clock.minute, 0, 0);
+
+          if (dayOffset === 0 && next <= now) {
+            next.setDate(next.getDate() + 7);
+          }
+
+          if (seasonStartText) {
+            const seasonStart = new Date(seasonStartText + 'T00:00:00');
+            if (!Number.isNaN(seasonStart.getTime())) {
+              seasonStart.setHours(clock.hour, clock.minute, 0, 0);
+              if (next < seasonStart) {
+                next.setTime(seasonStart.getTime());
+              }
+            }
+          }
+
+          if (seasonEndText) {
+            const seasonEnd = new Date(seasonEndText + 'T23:59:59');
+            if (Number.isNaN(seasonEnd.getTime()) || next > seasonEnd) {
+              return null;
+            }
+          }
+
+          return next;
+        }
+
+        function updateRecurringLeagueDates() {
+          const recurringItems = document.querySelectorAll('[data-recurring-league]');
+          const dateFormatter = new Intl.DateTimeFormat(undefined, {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric'
+          });
+          const timeFormatter = new Intl.DateTimeFormat(undefined, {
+            hour: 'numeric',
+            minute: '2-digit'
+          });
+          const monthFormatter = new Intl.DateTimeFormat(undefined, { month: 'short' });
+          const dayFormatter = new Intl.DateTimeFormat(undefined, { day: 'numeric' });
+
+          recurringItems.forEach((item) => {
+            const next = getNextOccurrence(
+              item.dataset.weekday,
+              item.dataset.time,
+              item.dataset.seasonStart,
+              item.dataset.seasonEnd
+            );
+            const nextTextNodes = item.querySelectorAll('[data-next-occurrence]');
+            const monthNodes = item.querySelectorAll('[data-next-occurrence-month]');
+            const dayNodes = item.querySelectorAll('[data-next-occurrence-day]');
+
+            if (!next) {
+              nextTextNodes.forEach((node) => {
+                node.textContent = 'League season is complete.';
+              });
+              return;
+            }
+
+            const displayText = 'Next occurrence: ' + dateFormatter.format(next) + ' at ' + timeFormatter.format(next);
+
+            nextTextNodes.forEach((node) => {
+              node.textContent = displayText;
+            });
+            monthNodes.forEach((node) => {
+              node.textContent = monthFormatter.format(next);
+            });
+            dayNodes.forEach((node) => {
+              node.textContent = dayFormatter.format(next);
+            });
+          });
+        }
+
+        updateRecurringLeagueDates();
+      });
+    </script>
+  </body>
+</html>

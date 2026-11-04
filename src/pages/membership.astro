@@ -1,0 +1,30 @@
+---
+import { getEntry, render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const page = await getEntry('site', 'membership');
+const { Content } = page ? await render(page) : { Content: null };
+---
+<BaseLayout title={page?.data.title ?? 'Membership'} description={page?.data.description}>
+  <article>
+    <header class="page-header">
+      <h1 class="font-display text-5xl">{page?.data.title ?? 'Membership'}</h1>
+    </header>
+    <div class="mx-auto w-full max-w-5xl px-6 py-12">
+      {Content && <div class="prose prose-stone max-w-none prose-headings:font-display prose-headings:uppercase prose-headings:tracking-wide prose-a:text-keene-blue"><Content /></div>}
+
+      {page?.data.signup_link && (
+        <div class="mt-8">
+          <a
+            href={page.data.signup_link}
+            class="inline-flex rounded-lg bg-keene-olive px-5 py-3 text-base font-display uppercase tracking-wide text-white shadow-soft transition hover:bg-keene-forest"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Join the Club
+          </a>
+        </div>
+      )}
+    </div>
+  </article>
+</BaseLayout>

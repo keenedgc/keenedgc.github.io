@@ -1,0 +1,107 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  nextEvent?: CollectionEntry<'events'>;
+  news: CollectionEntry<'news'>[];
+}
+
+const { nextEvent, news } = Astro.props;
+const fmtDate = (date?: Date) => (date ? date.toISOString().slice(0, 10) : undefined);
+const nextEventWeekday = nextEvent ? nextEvent.data.weekday ?? nextEvent.data.day : undefined;
+const recurring = Boolean(nextEvent && nextEvent.data.event_type === 'League' && nextEventWeekday && nextEvent.data.time);
+---
+<section class="py-10 sm:py-14">
+  <div class="mx-auto w-full max-w-6xl px-6">
+    <div class="grid gap-5 lg:grid-cols-3 lg:gap-8 xl:gap-10">
+      <div class="lg:max-w-[24rem]">
+        <div class="mb-4 flex items-end justify-between gap-4">
+          <h2 class="font-display text-3xl text-keene-forest">Next Event</h2>
+          <a href="/events/" class="text-base font-display uppercase tracking-wide text-keene-blue hover:text-keene-crimson">All events</a>
+        </div>
+
+        {nextEvent ? (
+          <a
+            href={`/events/${nextEvent.id}/`}
+            class="group block surface-panel overflow-hidden transition hover:-translate-y-0.5"
+            data-recurring-league={recurring ? true : undefined}
+            data-weekday={recurring ? nextEventWeekday : undefined}
+            data-time={recurring ? nextEvent.data.time : undefined}
+            data-season-start={recurring ? fmtDate(nextEvent.data.season_start) : undefined}
+            data-season-end={recurring ? fmtDate(nextEvent.data.season_end) : undefined}
+          >
+            {nextEvent.data.image ? (
+              <img src={nextEvent.data.image} alt={nextEvent.data.title} class="h-44 w-full object-cover" loading="lazy" />
+            ) : (
+              <div class="h-44 w-full bg-keene-sand"></div>
+            )}
+            <div class="p-5">
+              <div class="mb-3 flex flex-wrap items-center gap-3">
+                <div class="rounded-lg bg-keene-forest px-3 py-2 text-center text-white">
+                  {recurring ? (
+                    <>
+                      <p class="text-base font-display uppercase tracking-wide" data-next-occurrence-month>--</p>
+                      <p class="text-xl font-display" data-next-occurrence-day>--</p>
+                    </>
+                  ) : (
+                    <>
+                      <p class="text-base font-display uppercase tracking-wide">{nextEvent.data.date.toLocaleDateString('en-US', { month: 'short' })}</p>
+                      <p class="text-xl font-display">{nextEvent.data.date.toLocaleDateString('en-US', { day: 'numeric' })}</p>
+                    </>
+                  )}
+                </div>
+                <p class="rounded-lg bg-keene-sand px-3 py-1 text-base font-display uppercase tracking-wide text-keene-bark">{nextEvent.data.event_type}</p>
+                {nextEvent.data.tentative && (
+                  <p class="rounded-lg bg-keene-crimson px-3 py-1 text-base font-display uppercase tracking-wide text-white">Tentative</p>
+                )}
+              </div>
+              <h3 class="font-display text-2xl text-keene-forest transition group-hover:text-keene-blue">{nextEvent.data.title}</h3>
+              {nextEvent.data.location && <p class="mt-2 text-base text-stone-700">{nextEvent.data.location}</p>}
+              {recurring && <p class="mt-2 text-base font-medium text-keene-blue" data-next-occurrence>Next occurrence will appear here.</p>}
+            </div>
+          </a>
+        ) : (
+          <article class="surface-panel p-5">
+            <h3 class="font-display text-2xl text-keene-forest">No upcoming events</h3>
+            <p class="mt-2 text-base text-stone-700">Check back soon for new leagues, tournaments, and community rounds.</p>
+          </article>
+        )}
+      </div>
+
+      <div class="lg:col-span-2 lg:border-l lg:border-[#D4C9B8] lg:pl-6 xl:pl-8">
+        <div class="mb-4 flex items-end justify-between gap-4">
+          <h2 class="font-display text-3xl text-keene-forest">Latest News</h2>
+          <a href="/news/" class="text-base font-display uppercase tracking-wide text-keene-blue hover:text-keene-crimson">Read all</a>
+        </div>
+
+        {news.length > 0 ? (
+          <div class="surface-panel p-5">
+            <div class="divide-y divide-[#D4C9B8]">
+              {news.map((post) => (
+                <a href={`/news/${post.id}/`} class="group grid gap-4 py-4 first:pt-0 last:pb-0 md:grid-cols-[minmax(0,1fr)_22%] md:gap-5">
+                  <div class="order-2 min-w-0 md:order-1">
+                    <h3 class="font-display text-2xl text-keene-forest transition group-hover:text-keene-blue">{post.data.title}</h3>
+                    <p class="mt-1 text-base font-display uppercase tracking-wide text-stone-500">{post.data.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                    {post.data.description && <p class="mt-2 text-base leading-6 text-stone-700">{post.data.description}</p>}
+                  </div>
+                  <div class="order-1 aspect-[16/9] overflow-hidden rounded-lg border border-[#D4C9B8] bg-[#FAF8F5] md:order-2 md:aspect-auto md:self-stretch">
+                    {post.data.image ? (
+                      <img src={post.data.image} alt={post.data.title} class="h-full w-full object-cover" loading="lazy" />
+                    ) : (
+                      <div class="h-full min-h-20 w-full bg-keene-sand"></div>
+                    )}
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <article class="surface-panel p-5">
+            <h3 class="font-display text-2xl text-keene-forest">No news posts yet</h3>
+            <p class="mt-2 text-base text-stone-700">News updates will appear here once you publish your first post.</p>
+          </article>
+        )}
+      </div>
+    </div>
+  </div>
+</section>

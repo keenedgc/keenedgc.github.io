@@ -1,0 +1,52 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('news');
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+<BaseLayout title={post.data.title} description={post.data.description} image={post.data.image}>
+  <article>
+    <header class="page-header">
+      <h1 class="font-display text-5xl">{post.data.title}</h1>
+    </header>
+
+    <div class="mx-auto w-full max-w-5xl px-6 py-12">
+      <div class="text-base uppercase tracking-wide text-stone-500">
+        <time>{post.data.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</time>
+        {post.data.author && <span> • By {post.data.author}</span>}
+      </div>
+
+      {post.data.image ? (
+        <div class="mt-6 grid gap-8 lg:grid-cols-[minmax(0,24rem)_1fr] lg:items-start">
+          <div class="self-start overflow-hidden rounded-lg border border-[#D4C9B8] bg-white">
+            <div class="h-[18rem] max-h-[60vh] sm:h-[20rem] lg:h-[24rem]">
+              <img
+                src={post.data.image}
+                alt={post.data.title}
+                class="h-full w-full object-cover"
+              />
+            </div>
+          </div>
+
+          <div class="prose prose-stone max-w-none prose-headings:font-display prose-headings:uppercase prose-headings:tracking-wide prose-a:text-keene-blue">
+            <Content />
+          </div>
+        </div>
+      ) : (
+        <div class="prose prose-stone mt-8 max-w-none prose-headings:font-display prose-headings:uppercase prose-headings:tracking-wide prose-a:text-keene-blue">
+          <Content />
+        </div>
+      )}
+
+      <div class="mt-10">
+        <a href="/news/" class="text-base font-display uppercase tracking-wide text-keene-blue hover:text-keene-crimson">Back to News</a>
+      </div>
+    </div>
+  </article>
+</BaseLayout>

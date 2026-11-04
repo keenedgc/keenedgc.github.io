@@ -1,0 +1,35 @@
+---
+const items = [
+  {
+    title: 'Otter Brook',
+    body: 'Play our wooded 18-hole course just outside Keene on Route 9.',
+    href: '/courses/',
+    cta: 'Explore the course'
+  },
+  {
+    title: 'Events & Leagues',
+    body: 'Join weekly leagues, club rounds, and seasonal events throughout the year.',
+    href: '/events/',
+    cta: 'See upcoming events'
+  },
+  {
+    title: 'Club Updates',
+    body: 'Stay informed about course work, announcements, and community wins.',
+    href: '/news/',
+    cta: 'Read latest updates'
+  }
+];
+---
+<section class="py-10 sm:py-14">
+  <div class="mx-auto w-full max-w-6xl px-6">
+    <div class="grid gap-5 md:grid-cols-3">
+      {items.map((item) => (
+        <a href={item.href} class="group block rounded-lg border border-[#D4C9B8] bg-white/90 p-6 shadow-soft transition hover:-translate-y-0.5 hover:border-keene-olive/50">
+          <h2 class="border-l-4 border-l-keene-olive pl-3 font-display text-2xl text-keene-forest transition group-hover:text-keene-blue">{item.title}</h2>
+          <p class="mt-3 text-base leading-6 text-stone-700">{item.body}</p>
+          <p class="mt-4 text-base font-display uppercase tracking-wide text-keene-olive">{item.cta}</p>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>

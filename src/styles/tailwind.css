@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#FAF8F5] font-body text-base leading-7 text-stone-900 antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display uppercase tracking-wide;
+  }
+}
+
+@layer components {
+  .site-nav-menu.active {
+    @apply flex;
+  }
+
+  /* Title banner at the top of every page */
+  .page-header {
+    @apply bg-keene-forest py-12 text-center text-white;
+  }
+
+  .surface-panel {
+    @apply rounded-lg border border-[#D4C9B8] bg-white/90 shadow-panel backdrop-blur;
+  }
+
+  .texture-noise {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .texture-noise::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0.04;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+    z-index: 1;
+  }
+
+  .texture-noise > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .fc .fc-toolbar-title {
+    color: #2d4a22;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .fc .fc-button {
+    background-color: #575f47;
+    border-color: #575f47;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .fc .fc-button:hover,
+  .fc .fc-button:focus {
+    background-color: #2d4a22;
+    border-color: #2d4a22;
+  }
+
+  .fc .fc-button-primary:not(:disabled).fc-button-active {
+    background-color: #2d4a22;
+    border-color: #2d4a22;
+  }
+
+  .fc .fc-daygrid-day-number {
+    color: #5c4033;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+  }
+
+  .fc .fc-col-header-cell-cushion {
+    color: #2d4a22;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .fc .fc-event {
+    border-radius: 4px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.2;
+  }
+
+  .fc .fc-daygrid-event {
+    white-space: normal;
+  }
+
+  .fc .fc-event.fc-event-tentative {
+    border-style: dashed;
+    border-width: 1px;
+  }
+
+  .fc-theme-standard td,
+  .fc-theme-standard th {
+    border-color: #d4c9b8;
+  }
+}

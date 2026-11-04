@@ -1,0 +1,58 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # Daily rebuild so past events switch from Register to Results without a push
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Auto-add redirects for renamed event slugs
+        if: github.event_name == 'push'
+        run: node ./scripts/auto-event-redirects.mjs "${{ github.event.before }}" "${{ github.sha }}"
+      - name: Commit redirect alias updates
+        if: github.event_name == 'push'
+        run: |
+          if git diff --quiet -- src/content/events; then
+            echo "No redirect alias updates to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/content/events
+          git commit -m "chore(content): add event redirect aliases [skip ci]"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+      - name: Run content QA checks
+        run: bash ./scripts/qa-content.sh
+      - name: Install, build, and upload
+        uses: withastro/action@v5
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

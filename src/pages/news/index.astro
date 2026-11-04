@@ -1,0 +1,42 @@
+---
+import { getCollection, getEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const section = await getEntry('sections', 'news');
+const posts = (await getCollection('news')).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+<BaseLayout title={section?.data.title ?? 'News & Updates'} description={section?.data.description}>
+  <article>
+    <header class="page-header">
+      <h1 class="font-display text-5xl">{section?.data.title ?? 'News & Updates'}</h1>
+      {section?.data.description && <p class="mx-auto mt-3 max-w-2xl px-6 text-keene-cream/90">{section.data.description}</p>}
+    </header>
+
+    <div class="mx-auto w-full max-w-5xl px-6 py-12">
+      {posts.length > 0 ? (
+        <div class="grid gap-6 md:grid-cols-2">
+          {posts.map((post) => (
+            <article class="surface-panel overflow-hidden">
+              {post.data.image && (
+                <div class="h-56 overflow-hidden border-b border-[#D4C9B8]">
+                  <img src={post.data.image} alt={post.data.title} class="h-full w-full object-cover" />
+                </div>
+              )}
+              <div class="p-5">
+                <h2 class="font-display text-3xl text-keene-forest"><a href={`/news/${post.id}/`} class="hover:text-keene-blue">{post.data.title}</a></h2>
+                <div class="mt-2 text-base uppercase tracking-wide text-stone-500">
+                  <time>{post.data.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</time>
+                  {post.data.author && <span> • By {post.data.author}</span>}
+                </div>
+                {post.data.description && <p class="mt-4 text-base leading-6 text-stone-700">{post.data.description}</p>}
+                <a href={`/news/${post.id}/`} class="mt-4 inline-flex text-base font-display uppercase tracking-wide text-keene-blue hover:text-keene-crimson">Read more</a>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p>No news posts found.</p>
+      )}
+    </div>
+  </article>
+</BaseLayout>

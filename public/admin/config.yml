@@ -1,0 +1,437 @@
+# Sveltia CMS Configuration for Keene Disc Golf Club
+# This is a drop-in replacement for Decap/Netlify CMS with improved UI
+# Documentation: https://sveltia.app/docs
+
+# ============================================================================
+# BACKEND CONFIGURATION
+# ============================================================================
+# Defines how content is stored and retrieved
+backend:
+  name: github
+  repo: "keenedgc/keenedgc.github.io"
+  branch: main
+  # OAuth proxy URL - uncomment after deploying a Cloudflare Worker for this club
+  # See setup guide: https://sveltia.app/docs/deployment
+  # base_url: "https://YOUR-PROJECT.workers.dev"
+
+# ============================================================================
+# MEDIA CONFIGURATION
+# ============================================================================
+# Defines where uploaded images and files are stored
+media_folder: "public/images/uploads"  # Where files are saved in the repo
+public_folder: "/images/uploads"       # Public URL path for accessing files
+
+# ============================================================================
+# SITE URL
+# ============================================================================
+# Used for preview and editorial workflow features
+site_url: "https://keenedgc.github.io"
+
+# ============================================================================
+# COLLECTIONS
+# ============================================================================
+# Define all content types that editors can manage
+collections:
+
+  # --------------------------------------------------------------------------
+  # NEWS POSTS - Blog posts and announcements about the club
+  # --------------------------------------------------------------------------
+  - name: news
+    label: News Posts
+    folder: "src/content/news"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - name: title
+        label: Title
+        widget: string
+        required: true
+        hint: "Catchy headline for the news post"
+
+      - name: date
+        label: Publish Date
+        widget: datetime
+        required: true
+        date_format: "YYYY-MM-DD"
+        time_format: "HH:mm"
+
+      - name: author
+        label: Author
+        widget: string
+        required: true
+        hint: "Name of the person who wrote this post"
+
+      - name: description
+        label: Summary
+        widget: text
+        hint: "Brief summary that appears in listings"
+
+      - name: image
+        label: Featured Image
+        widget: image
+        required: false
+        multiple: false
+
+      - name: body
+        label: Content
+        widget: markdown
+        required: true
+
+  # --------------------------------------------------------------------------
+  # EVENTS - Tournaments, leagues, socials, and work days
+  # --------------------------------------------------------------------------
+  - name: events
+    label: Events
+    folder: "src/content/events"
+    create: true
+    slug: "{{fields._slug}}"
+    fields:
+      - name: title
+        label: Event Name
+        widget: string
+        required: true
+
+      - name: date
+        label: Event Date & Time
+        widget: datetime
+        required: true
+        date_format: "YYYY-MM-DD"
+        time_format: "HH:mm"
+
+      - name: location
+        label: Location
+        widget: string
+        required: true
+        hint: "Course name or venue"
+
+      - name: location_link
+        label: Location Link
+        widget: string
+        required: false
+        hint: "Optional URL for the location (e.g., Google Maps, UDisc, or course page)"
+
+      - name: event_type
+        label: Event Type
+        widget: select
+        required: true
+        options:
+          - Tournament
+          - League
+          - Casual Round
+          - Work Day
+          - Clinic
+          - Other
+
+      - name: tentative
+        label: Mark as tentative
+        widget: boolean
+        required: false
+        default: false
+        hint: "Show a Tentative badge anywhere this event is listed"
+
+      - name: registration_link
+        label: Registration Link
+        widget: string
+        required: false
+        hint: "URL for players to register (optional)"
+
+      - name: results_link
+        label: Results Link
+        widget: string
+        required: false
+        hint: "URL for results after the event, e.g. PDGA, UDisc or Disc Golf Scene (optional)"
+
+      - name: description
+        label: Description
+        widget: text
+        hint: "Brief overview of the event"
+
+      - name: redirect_from
+        label: Redirect From (Old Slugs)
+        widget: list
+        required: false
+        default: []
+        hint: "Optional old event slugs to redirect (for example: seasonal-doubles)"
+
+      - name: image
+        label: Event Image
+        widget: image
+        required: false
+        multiple: false
+        hint: "Optional image for league and event cards"
+
+      # League-specific fields (use when Event Type is League)
+      - name: day
+        label: Day of Week
+        widget: string
+        required: false
+        hint: "For leagues: e.g., Wednesdays, Thursdays"
+
+      - name: weekday
+        label: Recurs On
+        widget: select
+        required: false
+        options:
+          - Sunday
+          - Monday
+          - Tuesday
+          - Wednesday
+          - Thursday
+          - Friday
+          - Saturday
+        hint: "Recommended for leagues so the site can auto-calculate next occurrence dates"
+
+      - name: time
+        label: Start Time
+        widget: string
+        required: false
+        hint: "For leagues: e.g., 5:30 PM, 6:00 PM"
+
+      - name: season_end
+        label: League Season End Date
+        widget: datetime
+        date_format: "YYYY-MM-DD"
+        time_format: false
+        required: false
+        hint: "Optional but recommended. Recurring date display stops after this date."
+
+      - name: season_start
+        label: League Season Start Date
+        widget: datetime
+        date_format: "YYYY-MM-DD"
+        time_format: false
+        required: false
+        hint: "First occurrence date for recurring league display."
+
+      - name: format
+        label: League Format
+        widget: string
+        required: false
+        hint: "For leagues: e.g., 9-Hole Singles, 18-Hole Doubles, Tags"
+
+      - name: cost
+        label: Entry Fee / Cost
+        widget: string
+        required: false
+        hint: "For leagues: e.g., Free, $5/week, $10 per round"
+
+      - name: body
+        label: Details
+        widget: markdown
+        required: true
+        hint: "Full event details, rules, entry fees, etc."
+
+  # --------------------------------------------------------------------------
+  # COURSES - Local and regional disc golf courses
+  # --------------------------------------------------------------------------
+  - name: courses
+    label: Courses
+    folder: "src/content/courses"
+    create: true
+    slug: "{{slug}}"
+    filter:
+      field: title
+      pattern: "^(?!_)"  # Hide files starting with underscore
+    fields:
+      - name: title
+        label: Course Name
+        widget: string
+        required: true
+
+      - name: weight
+        label: Display Order
+        widget: number
+        required: true
+        value_type: int
+        default: 50
+        hint: "Lower numbers appear first in listings"
+
+      - name: club_sponsored
+        label: Club Sponsored
+        widget: boolean
+        default: false
+        hint: "Check if this course is sponsored by or affiliated with the club"
+
+      - name: location
+        label: Location
+        widget: string
+        required: true
+        hint: "City or neighborhood"
+
+      - name: holes
+        label: Number of Holes
+        widget: number
+        required: true
+        value_type: int
+        min: 1
+        max: 27
+
+      - name: difficulty
+        label: Difficulty Level
+        widget: select
+        required: true
+        options:
+          - Beginner
+          - Intermediate
+          - Advanced
+
+      - name: udisc_link
+        label: UDisc Course Link
+        widget: string
+        required: false
+        hint: "Link to course on UDisc.com"
+
+      - name: image
+        label: Course Photo
+        widget: image
+        required: false
+        multiple: false
+
+      - name: description
+        label: Description
+        widget: text
+        hint: "Brief info about the course"
+
+      - name: body
+        label: Detailed Info
+        widget: markdown
+        required: true
+        hint: "Layout description, amenities, history, etc."
+
+  # --------------------------------------------------------------------------
+  # SOCIALS - Social media links displayed in the footer
+  # --------------------------------------------------------------------------
+  - name: socials
+    label: Social Links
+    folder: "src/content/socials"
+    create: true
+    slug: "{{slug}}"
+    description: "Social media links shown in the site footer"
+    fields:
+      - name: title
+        label: Platform Name
+        widget: string
+        required: true
+        hint: "e.g., Facebook, Instagram, YouTube"
+
+      - name: link
+        label: URL
+        widget: string
+        required: true
+        hint: "Full URL to your social media profile"
+
+      - name: icon
+        label: Icon
+        widget: select
+        required: true
+        options:
+          - facebook
+          - instagram
+          - discord
+        hint: "Which icon to display"
+
+      - name: weight
+        label: Display Order
+        widget: number
+        required: true
+        value_type: int
+        hint: "Lower numbers appear first"
+
+  # --------------------------------------------------------------------------
+  # PAGES - Static pages (About, Membership, Volunteer, Connect, etc.)
+  # --------------------------------------------------------------------------
+  - name: pages
+    label: Pages
+    description: "Static pages like About, Membership, etc."
+    files:
+
+      # About Page
+      - name: about
+        label: About Page
+        file: "src/content/site/about.md"
+        fields:
+          - name: title
+            label: Page Title
+            widget: string
+
+          - name: description
+            label: Description
+            widget: text
+
+          - name: body
+            label: Content
+            widget: markdown
+
+      # Connect Page
+      - name: connect
+        label: Connect Page
+        file: "src/content/site/connect.md"
+        fields:
+          - name: title
+            label: Page Title
+            widget: string
+
+          - name: description
+            label: Description
+            widget: text
+
+          - name: body
+            label: Content
+            widget: markdown
+
+      # Membership Page
+      - name: membership
+        label: Membership Page
+        file: "src/content/site/membership.md"
+        fields:
+          - name: title
+            label: Page Title
+            widget: string
+
+          - name: description
+            label: Description
+            widget: text
+
+          - name: signup_link
+            label: Membership Signup Link
+            widget: string
+            required: false
+            hint: "Registration link for the Join the Club button. Update each year."
+
+          - name: body
+            label: Content
+            widget: markdown
+
+      # Volunteer Page
+      - name: volunteer
+        label: Volunteer Page
+        file: "src/content/site/volunteer.md"
+        fields:
+          - name: title
+            label: Page Title
+            widget: string
+
+          - name: description
+            label: Description
+            widget: text
+
+          - name: body
+            label: Content
+            widget: markdown
+
+      # Leagues Page
+      - name: leagues
+        label: Leagues Page
+        file: "src/content/site/leagues.md"
+        fields:
+          - name: title
+            label: Page Title
+            widget: string
+
+          - name: description
+            label: Description
+            widget: text
+
+          - name: body
+            label: Content
+            widget: markdown

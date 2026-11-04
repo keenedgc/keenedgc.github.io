@@ -1,0 +1,34 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { siteConfig } from '../config/site';
+import Hero from '../components/widgets/Hero.astro';
+import NextEventNews from '../components/widgets/NextEventNews.astro';
+import CourseShowcase from '../components/widgets/CourseShowcase.astro';
+import CallToAction from '../components/widgets/CallToAction.astro';
+
+const now = new Date();
+const events = await getCollection('events');
+const upcoming = events
+  .filter((event) => {
+    if (event.data.event_type === 'League') {
+      return !event.data.season_end || event.data.season_end >= now;
+    }
+    return event.data.date >= new Date(now.toDateString());
+  })
+  .sort((a, b) => a.data.date.valueOf() - b.data.date.valueOf());
+
+const nextEvent = upcoming[0];
+
+const news = (await getCollection('news'))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 4);
+
+const courses = (await getCollection('courses')).sort((a, b) => (a.data.weight ?? 99) - (b.data.weight ?? 99));
+---
+<BaseLayout title={siteConfig.title} description={siteConfig.description}>
+  <Hero />
+  <NextEventNews nextEvent={nextEvent} news={news} />
+  <CourseShowcase courses={courses} />
+  <CallToAction />
+</BaseLayout>

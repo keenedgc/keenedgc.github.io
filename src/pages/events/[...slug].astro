@@ -1,0 +1,200 @@
+---
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { isEventUpcoming } from '../../utils/eventStatus';
+
+interface EventPageProps {
+  event: CollectionEntry<'events'>;
+  redirectTo?: never;
+}
+
+interface RedirectPageProps {
+  event?: never;
+  redirectTo: string;
+}
+
+type Props = EventPageProps | RedirectPageProps;
+
+export async function getStaticPaths() {
+  const normalizeEventSlug = (value: string): string | null => {
+    let normalized = value.trim().replace(/\\/g, '/');
+    if (!normalized) return null;
+
+    normalized = normalized.replace(/^\/+/, '').replace(/\/+$/, '');
+    normalized = normalized.replace(/^events\/+/, '');
+
+    return normalized || null;
+  };
+
+  const events = await getCollection('events');
+  const paths: Array<{ params: { slug: string }; props: Props }> = [];
+  const slugOwners = new Map<string, string>();
+
+  for (const event of events) {
+    const canonicalSlug = normalizeEventSlug(event.id);
+    if (!canonicalSlug) continue;
+
+    const existingOwner = slugOwners.get(canonicalSlug);
+    if (existingOwner && existingOwner !== event.id) {
+      throw new Error(`Conflicting event slug "${canonicalSlug}" between "${existingOwner}" and "${event.id}".`);
+    }
+
+    paths.push({
+      params: { slug: canonicalSlug },
+      props: { event }
+    });
+    slugOwners.set(canonicalSlug, event.id);
+
+    for (const candidate of event.data.redirect_from ?? []) {
+      const redirectSlug = normalizeEventSlug(candidate);
+      if (!redirectSlug || redirectSlug === canonicalSlug) continue;
+
+      const redirectOwner = slugOwners.get(redirectSlug);
+      if (redirectOwner && redirectOwner !== event.id) {
+        throw new Error(`Conflicting event redirect slug "${redirectSlug}" between "${redirectOwner}" and "${event.id}".`);
+      }
+      if (redirectOwner) continue;
+
+      paths.push({
+        params: { slug: redirectSlug },
+        props: { redirectTo: `/events/${canonicalSlug}/` }
+      });
+      slugOwners.set(redirectSlug, event.id);
+    }
+  }
+
+  return paths;
+}
+
+const { event, redirectTo } = Astro.props as Props;
+
+let Content: Awaited<ReturnType<typeof render>>['Content'] | null = null;
+let weekday: string | undefined;
+let recurring = false;
+let hasImage = false;
+let upcoming = true;
+let seasonStart: string | undefined;
+let seasonEnd: string | undefined;
+
+if (event) {
+  const rendered = await render(event);
+  Content = rendered.Content;
+  weekday = event.data.weekday ?? event.data.day;
+  recurring = Boolean(event.data.event_type === 'League' && weekday && event.data.time);
+  hasImage = Boolean(event.data.image);
+  upcoming = isEventUpcoming(event);
+  seasonStart = recurring && event.data.season_start ? event.data.season_start.toISOString().slice(0, 10) : undefined;
+  seasonEnd = recurring && event.data.season_end ? event.data.season_end.toISOString().slice(0, 10) : undefined;
+}
+---
+{redirectTo ? (
+  <html lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <meta http-equiv="refresh" content={`0; url=${redirectTo}`} />
+      <meta name="robots" content="noindex" />
+      <link rel="canonical" href={redirectTo} />
+      <title>Redirecting...</title>
+    </head>
+    <body>
+      <p>Redirecting to <a href={redirectTo}>{redirectTo}</a>...</p>
+    </body>
+  </html>
+) : event ? (
+  <BaseLayout title={event.data.title} description={event.data.description} image={event.data.image}>
+    <article>
+      <header class="page-header">
+        <h1 class="font-display text-5xl">{event.data.title}</h1>
+        {event.data.tentative && (
+          <p class="mt-4">
+            <span class="inline-flex rounded-lg bg-white/15 px-3 py-1 text-base font-display uppercase tracking-wide text-white ring-1 ring-white/30">
+              Tentative
+            </span>
+          </p>
+        )}
+      </header>
+
+      <div class="mx-auto w-full max-w-5xl px-6 py-12">
+        <div class={`grid gap-5 ${hasImage ? 'lg:grid-cols-2 lg:items-start' : ''}`}>
+          {event.data.image && (
+            <img
+              src={event.data.image}
+              alt={event.data.title}
+              class="h-60 w-full rounded-xl object-cover sm:h-72 lg:h-full"
+              loading="eager"
+            />
+          )}
+          <div
+            class="surface-panel grid gap-4 p-5 sm:grid-cols-2"
+            data-recurring-league={recurring ? true : undefined}
+            data-weekday={recurring ? weekday : undefined}
+            data-time={recurring ? event.data.time : undefined}
+            data-season-start={seasonStart}
+            data-season-end={seasonEnd}
+          >
+            {event.data.event_type === 'League' ? (
+              <>
+                {event.data.day && <div><h2 class="text-base font-display uppercase tracking-wide text-stone-500">Day</h2><p>{event.data.day}</p></div>}
+                {event.data.time && <div><h2 class="text-base font-display uppercase tracking-wide text-stone-500">Time</h2><p>{event.data.time}</p></div>}
+                {recurring && <div class="sm:col-span-2"><h2 class="text-base font-display uppercase tracking-wide text-stone-500">Next Occurrence</h2><p class="text-keene-blue" data-next-occurrence>Next occurrence will appear here.</p></div>}
+                {event.data.location && <div><h2 class="text-base font-display uppercase tracking-wide text-stone-500">Location</h2><p>{event.data.location}</p></div>}
+                {event.data.format && <div><h2 class="text-base font-display uppercase tracking-wide text-stone-500">Format</h2><p>{event.data.format}</p></div>}
+                {event.data.cost && <div><h2 class="text-base font-display uppercase tracking-wide text-stone-500">Cost</h2><p>{event.data.cost}</p></div>}
+              </>
+            ) : (
+              <>
+                <div>
+                  <h2 class="text-base font-display uppercase tracking-wide text-stone-500">Date & Time</h2>
+                  <p>
+                    <time datetime={event.data.date.toISOString()}>
+                      {event.data.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                    </time>
+                    {event.data.time && <><br /><span>{event.data.time}</span></>}
+                  </p>
+                </div>
+                {event.data.location && <div><h2 class="text-base font-display uppercase tracking-wide text-stone-500">Location</h2><p>{event.data.location}</p></div>}
+                <div>
+                  <h2 class="text-base font-display uppercase tracking-wide text-stone-500">Event Type</h2>
+                  <p class="flex flex-wrap gap-2">
+                    <span class="rounded-lg bg-keene-sand px-3 py-1 text-base font-display uppercase tracking-wide text-keene-bark">{event.data.event_type}</span>
+                    {event.data.tentative && (
+                      <span class="rounded-lg bg-keene-crimson px-3 py-1 text-base font-display uppercase tracking-wide text-white">Tentative</span>
+                    )}
+                  </p>
+                </div>
+              </>
+            )}
+
+            {upcoming && event.data.registration_link && (
+              <div class="sm:col-span-2">
+                <a href={event.data.registration_link} class="inline-flex rounded-lg bg-keene-olive px-4 py-2 text-base font-display uppercase tracking-wide text-white transition hover:bg-keene-forest">{event.data.event_type === 'League' ? 'Sign Up Now' : 'Register Now'}</a>
+              </div>
+            )}
+
+            {!upcoming && event.data.results_link && (
+              <div class="sm:col-span-2">
+                <a
+                  href={event.data.results_link}
+                  class="inline-flex rounded-lg bg-keene-olive px-4 py-2 text-base font-display uppercase tracking-wide text-white transition hover:bg-keene-forest"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View Results
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div class="prose prose-stone mt-10 max-w-none prose-headings:font-display prose-headings:uppercase prose-headings:tracking-wide prose-a:text-keene-blue">
+          {Content && <Content />}
+        </div>
+
+        <div class="mt-10">
+          <a href="/events/" class="text-base font-display uppercase tracking-wide text-keene-blue hover:text-keene-crimson">Back to Events</a>
+        </div>
+      </div>
+    </article>
+  </BaseLayout>
+) : null}

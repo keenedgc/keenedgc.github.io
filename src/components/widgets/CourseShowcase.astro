@@ -1,0 +1,41 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  courses: CollectionEntry<'courses'>[];
+}
+
+const { courses } = Astro.props;
+---
+{courses.length > 0 && (
+  <section class="py-10 sm:py-14">
+    <div class="mx-auto w-full max-w-6xl px-6">
+      <div class="mb-6 flex items-end justify-between gap-4">
+        <h2 class="font-display text-3xl text-keene-forest sm:text-4xl">Local Courses</h2>
+        <a href="/courses/" class="text-base font-display uppercase tracking-wide text-keene-blue hover:text-keene-crimson">Browse all</a>
+      </div>
+      <div class="grid gap-5 md:grid-cols-3">
+        {courses.slice(0, 3).map((course) => (
+          <a href={`/courses/${course.id}/`} class="group block surface-panel overflow-hidden transition hover:-translate-y-0.5">
+            <div class="h-44 w-full overflow-hidden border-b border-[#D4C9B8]">
+              {course.data.image ? (
+                <img src={course.data.image} alt={course.data.title} class="h-full w-full object-cover" />
+              ) : (
+                <div class="h-full w-full bg-keene-sand"></div>
+              )}
+            </div>
+            <div class="p-5">
+              <h3 class="font-display text-2xl text-keene-forest transition group-hover:text-keene-blue">{course.data.title}</h3>
+              {course.data.location && <p class="mt-2 text-base text-stone-700">{course.data.location}</p>}
+              <div class="mt-3 flex flex-wrap gap-2">
+                {course.data.holes && <span class="rounded-lg bg-keene-sand px-3 py-1 text-base font-display uppercase tracking-wide text-keene-bark">{course.data.holes} holes</span>}
+                {course.data.difficulty && <span class="rounded-lg bg-keene-blue/10 px-3 py-1 text-base font-display uppercase tracking-wide text-keene-blue">{course.data.difficulty}</span>}
+                {course.data.club_sponsored && <span class="rounded-lg bg-keene-crimson px-3 py-1 text-base font-display uppercase tracking-wide text-white">Club Sponsored</span>}
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+)}

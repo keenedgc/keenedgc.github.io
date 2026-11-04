@@ -1,3 +1,9 @@
+---
+import { getEntry } from 'astro:content';
+
+const membership = await getEntry('site', 'membership');
+const signupLink = membership?.data.signup_link;
+---
 <section class="py-14 sm:py-16">
   <div class="mx-auto w-full max-w-6xl px-6">
     <div class="texture-noise surface-panel overflow-hidden bg-gradient-to-r from-keene-forest to-keene-olive p-8 text-keene-cream sm:p-10">
@@ -7,7 +13,12 @@
         Join leagues, stay up to date with club news, and help keep local courses welcoming for every player.
       </p>
       <div class="mt-7 flex flex-wrap gap-3">
-        <a href="/events/" class="rounded-lg bg-keene-cream px-5 py-3 text-base font-display uppercase tracking-wide text-keene-forest transition hover:bg-keene-sand">Upcoming Events</a>
+        {signupLink && (
+          <a href={signupLink} target="_blank" rel="noopener noreferrer" class="rounded-lg bg-keene-cream px-5 py-3 text-base font-display uppercase tracking-wide text-keene-forest transition hover:bg-keene-sand">Join the Club</a>
+        )}
+        <a href="/events/" class={signupLink
+          ? 'rounded-lg border border-keene-cream/40 px-5 py-3 text-base font-display uppercase tracking-wide text-keene-cream transition hover:bg-white/10'
+          : 'rounded-lg bg-keene-cream px-5 py-3 text-base font-display uppercase tracking-wide text-keene-forest transition hover:bg-keene-sand'}>Upcoming Events</a>
         <a href="/connect/" class="rounded-lg border border-keene-cream/40 px-5 py-3 text-base font-display uppercase tracking-wide text-keene-cream transition hover:bg-white/10">Connect With Us</a>
       </div>
     </div>

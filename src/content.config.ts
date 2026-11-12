@@ -70,7 +70,19 @@ const courses = defineCollection({
     udisc_link: z.string().optional(),
     image: z.string().optional(),
     description: z.string().optional(),
-    date: z.coerce.date().optional()
+    date: z.coerce.date().optional(),
+    // Course record boards (Singles, Doubles, ...). Each gets a page at
+    // /courses/<course>/records/<format>/ built from the JSON at `url`.
+    records: z
+      .array(
+        z.object({
+          format: z.string(),
+          url: z.string(),
+          // Optional: only show ranks up to this number (e.g. 30 = "Top 30")
+          limit: z.number().optional()
+        })
+      )
+      .optional()
   })
 });
 

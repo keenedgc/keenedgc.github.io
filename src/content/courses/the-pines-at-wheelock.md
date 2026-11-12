@@ -8,6 +8,14 @@ difficulty: Beginner
 udisc_link: https://udisc.com/courses/the-pines-at-wheelock-RPtA
 image: /images/uploads/the-pines-hole-9.jpg
 description: A short, flat, beginner-friendly 9-hole pitch and putt course at Wheelock Park in Keene
+# Course records. Each format gets its own page; change the url here if the data source moves.
+records:
+  - format: Singles
+    url: https://evankkerns.github.io/leaderboarder/api/courses/wheelock/singles/scores.json
+    limit: 100
+  - format: Doubles
+    url: https://evankkerns.github.io/leaderboarder/api/courses/wheelock/doubles/scores.json
+    limit: 100
 ---
 
 ## Course Overview

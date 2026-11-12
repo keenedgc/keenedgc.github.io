@@ -8,6 +8,11 @@ difficulty: Intermediate
 udisc_link: https://udisc.com/courses/otter-brook-6eOq
 image: /images/uploads/otter-brook-hole-12.jpg
 description: A wooded, hilly 18-hole course outside Keene, built and maintained by club volunteers
+# Course records. Each format gets its own page; change the url here if the data source moves.
+records:
+  - format: PDGA Singles
+    url: https://evankkerns.github.io/leaderboarder/api/courses/otterbrook/pdga-singles/scores.json
+    limit: 100
 ---
 
 ## Course Overview

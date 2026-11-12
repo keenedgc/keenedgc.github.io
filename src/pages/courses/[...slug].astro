@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { recordsSlug } from '../../utils/courseRecords';
 
 export async function getStaticPaths() {
   const courses = await getCollection('courses');
@@ -46,6 +47,21 @@ const { Content } = await render(course);
               >
                 View on UDisc
               </a>
+            </div>
+          )}
+          {course.data.records && course.data.records.length > 0 && (
+            <div class="mt-6">
+              <h2 class="text-base font-display uppercase tracking-wide text-stone-500">Course Records</h2>
+              <div class="mt-2 flex flex-wrap gap-2">
+                {course.data.records.map((board) => (
+                  <a
+                    href={`/courses/${course.id}/records/${recordsSlug(board.format)}/`}
+                    class="inline-flex rounded-lg border border-keene-olive px-4 py-2 text-base font-display uppercase tracking-wide text-keene-olive transition hover:bg-keene-olive hover:text-white"
+                  >
+                    {board.format}
+                  </a>
+                ))}
+              </div>
             </div>
           )}
         </aside>

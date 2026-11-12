@@ -292,6 +292,16 @@ collections:
         widget: text
         hint: "Brief info about the course"
 
+      - name: records
+        label: Course Records
+        widget: list
+        required: false
+        hint: "One entry per format (Singles, Doubles...). Each gets a records page."
+        fields:
+          - { name: format, label: Format, widget: string }
+          - { name: url, label: Records JSON URL, widget: string }
+          - { name: limit, label: Show Top N (optional), widget: number, value_type: int, required: false, hint: "e.g. 30 shows ranks 1-30. Leave blank to show everyone." }
+
       - name: body
         label: Detailed Info
         widget: markdown

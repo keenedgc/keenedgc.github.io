@@ -1,0 +1,212 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import { fetchCourseScores, recordsSlug } from '../../../../utils/courseRecords';
+
+export async function getStaticPaths() {
+  const courses = await getCollection('courses');
+  return courses.flatMap((course) =>
+    (course.data.records ?? []).map((board) => ({
+      params: { course: course.id, format: recordsSlug(board.format) },
+      props: { course, board }
+    }))
+  );
+}
+
+const { course, board } = Astro.props;
+const data = await fetchCourseScores(board.url);
+// Only ranked scores (unranked ones, like 9-hole rounds, have no scoreRank). With a limit,
+// keep every score ranked within it, so a tie at the cutoff stays together.
+const rows = data
+  ? data.scores.filter((s) => s.scoreRank != null && (!board.limit || s.scoreRank <= board.limit))
+  : [];
+
+// Optional columns appear only when the data has them (e.g. PDGA boards).
+const hasRating = rows.some((s) => s.rating != null);
+const hasDivision = rows.some((s) => s.division);
+// Tournament boards show event/par/round/layout in place of Format.
+const hasTournament = rows.some((s) => s.eventName);
+// PDGA-sourced boards get an attribution line under the table.
+const isPdga = rows.some((s) => s.pdgaEventId != null || s.pdgaProfileUrl);
+
+// Shorten long text: first `max` characters plus "..."
+const truncate = (value: string | null | undefined, max: number) =>
+  !value ? '' : value.length > max ? `${value.slice(0, max).trimEnd()}...` : value;
+// PDGA live scores for that event/division/round (parts left off if missing).
+const eventUrl = (s: { pdgaEventId?: number | null; division?: string | null; round?: number | null }) => {
+  if (s.pdgaEventId == null) return null;
+  let url = `https://www.pdga.com/live/event/${s.pdgaEventId}`;
+  if (s.division) url += `/${encodeURIComponent(s.division)}/scores`;
+  if (s.division && s.round != null) url += `?round=${s.round}`;
+  return url;
+};
+const roundLine =(s: { par?: number | null; round?: number | null; layoutName?: string | null }) =>
+  [s.par != null ? `Par ${s.par}` : '', s.round != null ? `Rd ${s.round}` : '', truncate(s.layoutName, 25)]
+    .filter(Boolean)
+    .join(' · ');
+
+const updated = data?.generatedAt
+  ? new Date(data.generatedAt).toLocaleString('en-US', {
+      timeZone: 'America/New_York',
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    })
+  : null;
+
+// eventDate is a plain YYYY-MM-DD date; format it in UTC so it never shifts a day.
+const formatDate = (value: string | null) => {
+  if (!value) return '';
+  const date = new Date(`${value}T00:00:00Z`);
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+// Relative to par: -17, E, +3
+const formatScore = (score: number) => (score === 0 ? 'E' : score > 0 ? `+${score}` : `${score}`);
+const fullName = (s: { firstName: string | null; lastName: string | null }) =>
+  [s.firstName, s.lastName].filter(Boolean).join(' ');
+
+const title = `${course.data.title} ${board.format} Records`;
+const otherBoards = (course.data.records ?? []).filter((b) => b.format !== board.format);
+const sortButton = 'inline-flex items-center gap-1 uppercase tracking-wide hover:text-keene-cream';
+---
+<BaseLayout title={title} description={`${board.format} course records at ${course.data.title}.`}>
+  <article>
+    <header class="page-header">
+      <p class="text-base font-display uppercase tracking-[0.2em] text-white/80">{course.data.title}</p>
+      <h1 class="mt-2 font-display text-5xl">{board.format} Records</h1>
+    </header>
+
+    <div class="mx-auto w-full max-w-5xl px-6 py-12">
+      {otherBoards.length > 0 && (
+        <div class="mb-6 flex flex-wrap gap-2">
+          {otherBoards.map((b) => (
+            <a href={`/courses/${course.id}/records/${recordsSlug(b.format)}/`} class="rounded-lg border border-keene-olive px-4 py-2 text-base font-display uppercase tracking-wide text-keene-olive transition hover:bg-keene-olive hover:text-white">{b.format}</a>
+          ))}
+        </div>
+      )}
+
+      {data && rows.length > 0 ? (
+        <>
+          <p class="mb-4 text-sm text-stone-500">
+            {board.limit && <span>Top {board.limit}</span>}
+            {board.limit && updated && <span> · </span>}
+            {updated && <span>Last updated {updated}</span>}
+          </p>
+
+          <div class="overflow-x-auto rounded-lg border border-[#D4C9B8] bg-white">
+            <table class="w-full text-left text-stone-800">
+              <thead class="bg-keene-forest text-white">
+                <tr class="font-display uppercase tracking-wide">
+                  <th class="px-4 py-3">Rank</th>
+                  <th class="px-4 py-3" aria-sort="ascending">
+                    <button type="button" data-sort-key="score" data-sort-first="ascending" class={sortButton}>Score<span data-sort-icon aria-hidden="true">↑</span></button>
+                  </th>
+                  {hasRating && (
+                    <th class="px-4 py-3" aria-sort="none">
+                      <button type="button" data-sort-key="rating" data-sort-first="descending" class={sortButton}>Rating<span data-sort-icon aria-hidden="true">↕</span></button>
+                    </th>
+                  )}
+                  <th class="px-4 py-3">Name</th>
+                  <th class="px-4 py-3" aria-sort="none">
+                    <button type="button" data-sort-key="date" data-sort-first="descending" class={sortButton}>Date<span data-sort-icon aria-hidden="true">↕</span></button>
+                  </th>
+                  <th class="px-4 py-3 text-right" aria-sort="none">
+                    <button type="button" data-sort-key="holes" data-sort-first="descending" class={sortButton}>Holes<span data-sort-icon aria-hidden="true">↕</span></button>
+                  </th>
+                  {hasDivision && <th class="px-4 py-3">Division</th>}
+                  <th class="px-4 py-3">{hasTournament ? 'Tournament' : 'Format'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((s, i) => (
+                  <tr
+                    class="border-t border-[#E6DDCF] even:bg-keene-sand/30"
+                    data-order={i}
+                    data-score={s.score}
+                    data-date={s.eventDate ? s.eventDate.replace(/-/g, '') : 0}
+                    data-holes={s.played ?? 0}
+                    data-rating={s.rating ?? 0}
+                  >
+                    <td class="px-4 py-2 whitespace-nowrap">{s.scoreRankTied ? `T-${s.scoreRank}` : s.scoreRank}</td>
+                    <td class="px-4 py-2 font-semibold">{formatScore(s.score)}</td>
+                    {hasRating && <td class="px-4 py-2">{s.rating ?? ''}</td>}
+                    <td class="px-4 py-2">
+                      {s.pdgaProfileUrl ? (
+                        <a href={s.pdgaProfileUrl} target="_blank" rel="noopener noreferrer" class="text-keene-blue hover:text-keene-crimson hover:underline">{fullName(s)}</a>
+                      ) : (
+                        fullName(s)
+                      )}
+                    </td>
+                    <td class="px-4 py-2 whitespace-nowrap">{formatDate(s.eventDate)}</td>
+                    <td class="px-4 py-2 text-right">{s.played ?? ''}</td>
+                    {hasDivision && <td class="px-4 py-2">{s.division ?? ''}</td>}
+                    {hasTournament ? (
+                      <td class="px-4 py-1.5 whitespace-nowrap text-xs leading-tight">
+                        <div class="text-stone-800" title={s.eventName ?? undefined}>
+                          {eventUrl(s) ? (
+                            <a href={eventUrl(s)} target="_blank" rel="noopener noreferrer" class="text-keene-blue hover:text-keene-crimson hover:underline">{truncate(s.eventName, 40)}</a>
+                          ) : (
+                            truncate(s.eventName, 40)
+                          )}
+                        </div>
+                        <div class="text-stone-500" title={s.layoutName ?? undefined}>{roundLine(s)}</div>
+                      </td>
+                    ) : (
+                      <td class="px-4 py-2">{s.format ?? ''}</td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {isPdga && <p class="mt-3 text-sm text-stone-500">Player, event, and course data provided by PDGA.</p>}
+        </>
+      ) : (
+        <p class="text-stone-700">Records aren't available right now. Check back soon.</p>
+      )}
+
+      <div class="mt-10">
+        <a href={`/courses/${course.id}/`} class="text-base font-display uppercase tracking-wide text-keene-blue hover:text-keene-crimson">Back to {course.data.title}</a>
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<script>
+  // Click a header to sort by it; click again to flip. Score starts lowest first (the JSON's
+  // original order); Date starts newest first; Holes starts highest first.
+  const buttons = document.querySelectorAll<HTMLButtonElement>('button[data-sort-key]');
+  let activeKey = 'score';
+  let direction: 'descending' | 'ascending' = 'ascending';
+
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const key = button.dataset.sortKey!;
+      const tbody = button.closest('table')!.querySelector('tbody')!;
+      const rows = Array.from(tbody.querySelectorAll<HTMLTableRowElement>('tr'));
+
+      if (key === activeKey) {
+        direction = direction === 'ascending' ? 'descending' : 'ascending';
+      } else {
+        activeKey = key;
+        direction = button.dataset.sortFirst === 'ascending' ? 'ascending' : 'descending';
+      }
+
+      const num = (row: HTMLTableRowElement, k: string) => Number(row.dataset[k] ?? 0);
+      rows.sort((a, b) => {
+        const diff = num(a, key) - num(b, key);
+        if (diff !== 0) return direction === 'descending' ? -diff : diff;
+        return num(a, 'order') - num(b, 'order'); // ties keep the JSON order
+      });
+      tbody.append(...rows);
+
+      buttons.forEach((b) => {
+        const isActive = b === button;
+        b.closest('th')!.setAttribute('aria-sort', isActive ? direction : 'none');
+        b.querySelector('[data-sort-icon]')!.textContent = isActive ? (direction === 'descending' ? '↓' : '↑') : '↕';
+      });
+    });
+  });
+</script>
